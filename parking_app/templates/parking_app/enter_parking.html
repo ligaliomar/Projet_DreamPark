@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Entrer dans le parking</title>
+</head>
+<body>
+    <h1>Entrer dans le parking</h1>
+
+    <form method="POST">
+        {% csrf_token %}
+        
+        <label>Numéro de plaque :</label>
+        <input type="text" name="plate_number" required><br><br>
+
+        <label>Longueur du véhicule (m) :</label>
+        <input type="number" step="0.01" name="length" required><br><br>
+
+        <label>Hauteur du véhicule (m) :</label>
+        <input type="number" step="0.01" name="height" required><br><br>
+
+        <button type="submit">Se garer</button>
+    </form>
+
+</body>
+</html>
