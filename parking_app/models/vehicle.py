@@ -3,14 +3,30 @@ from .parking_spot import ParkingSpot
 
 class Vehicle(models.Model):
     """
-    Représente un véhicule entrant dans le parking.
+    Classe pour representer une voiture qui entre dans le parking
+    J'ai mis tous les attributs demandes dans le sujet
     """
-    plate_number = models.CharField(max_length=20)
-    length = models.FloatField()
-    height = models.FloatField()
-    entry_time = models.DateTimeField(auto_now_add=True)
+    class SubscriptionType(models.TextChoices):
+        NONE = "NONE", "Client occasionnel"
+        STANDARD = "STANDARD", "Abonné"
+        GUARANTEED = "GUARANTEED", "Pack garanti"
+    
+    # Immatriculation du vehicule
+    plaque_immat = models.CharField(max_length=20)
+    # Dimensions de la voiture (en metres)
+    longueur = models.FloatField()
+    hauteur = models.FloatField()
+    # Heure d'entree dans le parking
+    heure_entree = models.DateTimeField(auto_now_add=True)
+    # Type d'abonnement (par defaut client occasionnel)
+    type_abonnement = models.CharField(
+        max_length=20,
+        choices=SubscriptionType.choices,
+        default=SubscriptionType.NONE
+    )
 
-    assigned_spot = models.OneToOneField(
+    # La place assignee au vehicule (peut etre vide)
+    place_assignee = models.OneToOneField(
         ParkingSpot,
         null=True,
         blank=True,
@@ -18,4 +34,4 @@ class Vehicle(models.Model):
     )
 
     def __str__(self):
-        return self.plate_number
+        return self.plaque_immat

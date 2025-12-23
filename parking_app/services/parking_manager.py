@@ -8,66 +8,71 @@ from parking_app.models.ticket import Ticket
 
 class ParkingManager:
     """
-    Gère l'assignation et la libération des places dans DreamPark.
+    Classe qui gere l'assignation et la liberation des places
+    C'est le composant principal du systeme de parking DreamPark
     """
 
-    def assign_place(self, vehicle: Vehicle) -> Optional[ParkingSpot]:
+    def attribuer_place(self, voiture: Vehicle, abonnement=None) -> Optional[ParkingSpot]:
         """
-        Tente d'assigner une place au véhicule.
-        Retourne la place assignée ou None si aucune place n'est adaptée.
+        Essaye de trouver une place pour la voiture
+        Retourne la place si on en trouve une, sinon None (parking plein)
         """
 
-        # Récupération des places libres compatibles
-        spots = ParkingSpot.objects.filter(
-            is_occupied=False,
-            max_length__gte=vehicle.length,
-            max_height__gte=vehicle.height
+        # Je cherche toutes les places qui sont libres et assez grandes
+        places_possibles = ParkingSpot.objects.filter(
+            est_occupee=False,
+            longueur_max__gte=voiture.longueur,
+            hauteur_max__gte=voiture.hauteur
         )
 
-        if not spots.exists():
-            return None  # Parking plein
+        # Si y'a aucune place dispo, on retourne None
+        if not places_possibles.exists():
+            return None  # parking complet
 
-        # On prend la première place libre adaptée
-        spot = spots.first()
+        # Je prends la premiere place qui convient
+        place = places_possibles.first()
 
-        # 1) Assigner la place au véhicule
-        vehicle.assigned_spot = spot
-        vehicle.save()
+        # Etape 1: j'assigne la place a la voiture
+        voiture.place_assignee = place
+        voiture.save()
 
-        # 2) Marquer la place comme occupée
-        spot.is_occupied = True
-        spot.save()
+        # Etape 2: je marque la place comme occupee
+        place.est_occupee = True
+        place.save()
 
-        # 3) Créer un ticket
+        # Etape 3: creation du ticket (comme dans le sujet)
+        a_abonnement = abonnement is not None
         Ticket.objects.create(
-            vehicle=vehicle,
-            is_subscription=False,
-            payment_method="cash"
+            vehicule=voiture,
+            abonnement=abonnement,
+            a_un_abonnement=a_abonnement,
+            mode_paiement="cash"  # par defaut especes
         )
 
-        # 4) Mise à jour du panneau (console pour l'instant)
-        self.update_display()
+        # Etape 4: mise a jour du panneau d'affichage
+        self.mettre_a_jour_panneau()
 
-        return spot
+        return place
 
-    def free_place(self, spot: ParkingSpot):
+    def liberer_place(self, place: ParkingSpot):
         """
-        Libère une place de parking.
+        Libere une place quand une voiture sort du parking
         """
 
-        # 1) Libérer la place
-        spot.is_occupied = False
-        spot.save()
+        # Je remets la place en mode disponible
+        place.est_occupee = False
+        place.save()
 
-        # 2) Retirer la place du véhicule (si un véhicule y était)
-        Vehicle.objects.filter(assigned_spot=spot).update(assigned_spot=None)
+        # J'enleve la place assignee au vehicule qui etait la
+        Vehicle.objects.filter(place_assignee=place).update(place_assignee=None)
 
-        # 3) Mise à jour de l'affichage
-        self.update_display()
+        # Mise a jour du panneau
+        self.mettre_a_jour_panneau()
 
-    def update_display(self):
+    def mettre_a_jour_panneau(self):
         """
-        Affiche dans la console le nombre de places disponibles.
+        Met a jour l'affichage du nombre de places dispo
+        (comme dit dans le sujet avec les panneaux aux acces)
         """
-        free = ParkingSpot.objects.filter(is_occupied=False).count()
-        print(f"[PANNEAU] Places disponibles : {free}")
+        nb_places_libres = ParkingSpot.objects.filter(est_occupee=False).count()
+        print(f"[PANNEAU AFFICHAGE] Places disponibles : {nb_places_libres}")

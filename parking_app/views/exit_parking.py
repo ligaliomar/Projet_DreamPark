@@ -4,37 +4,44 @@ from parking_app.models.ticket import Ticket
 from parking_app.models.parking_spot import ParkingSpot
 
 def exit_parking(request):
+    """
+    Vue pour gerer la sortie d'un vehicule
+    Le client presente son ticket et paye le montant
+    """
     if request.method == "POST":
-        plate = request.POST.get("plate_number")
+        # Recuperation de la plaque d'immat
+        plaque = request.POST.get("plate_number")
 
+        # Je cherche le ticket correspondant
         try:
-            ticket = Ticket.objects.get(vehicle__plate_number=plate)
+            ticket = Ticket.objects.get(vehicule__plaque_immat=plaque)
         except Ticket.DoesNotExist:
             return render(request, "parking_app/exit_parking.html", {
-                "error": "Aucun ticket trouvé pour cette plaque."
+                "error": "Aucun ticket trouve pour cette plaque."
             })
 
-        if ticket.exit_time:
+        # Verification que la voiture n'est pas deja sortie
+        if ticket.heure_sortie:
             return render(request, "parking_app/exit_parking.html", {
-                "error": "Ce véhicule est déjà sorti du parking."
+                "error": "Ce vehicule a deja quitte le parking."
             })
 
         # 1) Enregistre l’heure de sortie
-        ticket.exit_time = now()
+        ticket.heure_sortie = now()
 
         # 2) Calcule le prix
-        amount = ticket.compute_price()
-        ticket.amount_paid = amount
+        amount = ticket.calculer_prix() or 0
+        ticket.montant_paye = amount
         ticket.save()
 
         # 3) Libère la place
-        spot = ticket.vehicle.assigned_spot
+        spot = ticket.vehicule.place_assignee
         if spot:
-            spot.is_occupied = False
+            spot.est_occupee = False
             spot.save()
 
-            ticket.vehicle.assigned_spot = None
-            ticket.vehicle.save()
+            ticket.vehicule.place_assignee = None
+            ticket.vehicule.save()
 
         return render(request, "parking_app/exit_parking.html", {
             "success": f"Paiement effectué : {amount} €"

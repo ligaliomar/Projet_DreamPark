@@ -1,16 +1,23 @@
-<h2>Sortir du parking</h2>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Sortie - DreamPark</title>
+</head>
+<body>
+  <h1>Sortir du parking</h1>
 
-{% if error %}
-    <p style="color:red;">{{ error }}</p>
-{% endif %}
+  {% if error %}
+    <p style="color: red">{{ error }}</p>
+  {% endif %}
+  {% if success %}
+    <p style="color: green">{{ success }}</p>
+  {% endif %}
 
-{% if success %}
-    <p style="color:green;">{{ success }}</p>
-{% endif %}
-
-<form method="POST">
+  <form method="post">
     {% csrf_token %}
-    <label>Numéro d'immatriculation :</label>
-    <input type="text" name="plate_number" required>
+    <label>Numéro d'immatriculation : <input type="text" name="plate_number" required></label><br><br>
     <button type="submit">Sortir</button>
-</form>
+  </form>
+</body>
+</html>
